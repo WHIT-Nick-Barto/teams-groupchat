@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Open Group Chat</title>
+  <!-- Official Microsoft Teams JavaScript client library (TeamsJS v2) -->
+  <script src="https://res.cdn.office.net/teams-js/2.24.0/js/MicrosoftTeams.min.js"></script>
+  <style>
+    :root { color-scheme: light dark; }
+    body {
+      margin: 0; font-family: "Segoe UI", system-ui, sans-serif;
+      display: flex; align-items: center; justify-content: center;
+      min-height: 100vh; text-align: center;
+      background: transparent;
+    }
+    .card { max-width: 360px; padding: 32px 24px; }
+    h1 { font-size: 20px; margin: 0 0 8px; }
+    p { font-size: 14px; opacity: .8; margin: 0 0 24px; }
+    button, a.btn {
+      display: inline-block; border: none; cursor: pointer;
+      background: #4B53BC; color: #fff; text-decoration: none;
+      font-size: 15px; font-weight: 600;
+      padding: 12px 22px; border-radius: 8px;
+    }
+    button:hover, a.btn:hover { background: #3d44a0; }
+    .hint { margin-top: 16px; font-size: 12px; opacity: .6; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Team Group Chat</h1>
+    <p id="status">Opening your group chat…</p>
+    <button id="openBtn" type="button">Open Group Chat</button>
+    <div class="hint">If nothing happens, tap the button above.</div>
+  </div>
+
+  <script>
+    // ---- Configuration: the 4 participants + chat title ----
+    var PARTICIPANTS = [
+      "Ryan.Hoekenga@wheelhouseit.com",
+      "Kevin.Mas@wheelhouseit.com",
+      "rory.cooksey@wheelhouseit.com",
+      "darin.mcgrew@wheelhouseit.com"
+    ];
+    var TOPIC = "Team Chat";
+
+    // Raw deep-link fallback (used if the SDK isn't available)
+    var DEEP_LINK = "https://teams.microsoft.com/l/chat/0/0?users=" +
+      encodeURIComponent(PARTICIPANTS.join(",")) +
+      "&topicName=" + encodeURIComponent(TOPIC);
+
+    var statusEl = document.getElementById("status");
+
+    function openViaDeepLink() {
+      window.open(DEEP_LINK, "_blank");
+    }
+
+    function openGroupChat() {
+      // Prefer the typed TeamsJS API when running inside Teams.
+      if (window.microsoftTeams && microsoftTeams.chat &&
+          typeof microsoftTeams.chat.openGroupChat === "function") {
+        try {
+          if (!microsoftTeams.chat.isSupported || microsoftTeams.chat.isSupported()) {
+            microsoftTeams.chat.openGroupChat({
+              users: PARTICIPANTS,
+              topic: TOPIC
+            }).catch(function () { openViaDeepLink(); });
+            return;
+          }
+        } catch (e) { /* fall through to deep link */ }
+      }
+      openViaDeepLink();
+    }
+
+    document.getElementById("openBtn").addEventListener("click", openGroupChat);
+
+    // Initialize Teams, then auto-open once.
+    if (window.microsoftTeams && microsoftTeams.app && microsoftTeams.app.initialize) {
+      microsoftTeams.app.initialize()
+        .then(function () { openGroupChat(); })
+        .catch(function () {
+          statusEl.textContent = "Tap the button to open your group chat.";
+        });
+    } else {
+      statusEl.textContent = "Tap the button to open your group chat.";
+    }
+  </script>
+</body>
+</html>
